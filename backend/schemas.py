@@ -21,3 +21,24 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     email: str | None = None
+
+# Sidequest Schemas
+class SidequestBase(BaseModel):
+    title: str
+    description: str | None = None
+
+class SidequestCreate(SidequestBase):
+    pass
+
+class SidequestResponse(SidequestBase):
+    id: uuid.UUID
+    user_id: uuid.UUID
+    created_at: datetime
+    completed_at: datetime | None = None
+
+    class Config:
+        from_attributes = True
+
+class SidequestGenerateResponse(BaseModel):
+    title: str
+    description: str

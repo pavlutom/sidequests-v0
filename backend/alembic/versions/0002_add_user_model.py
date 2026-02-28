@@ -1,6 +1,6 @@
 """Add User model
 
-Revision ID: a18c9446c5c7
+Revision ID: 0002
 Revises: 0001
 Create Date: 2026-02-28 19:20:50.103528
 
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'a18c9446c5c7'
+revision: str = '0002'
 down_revision: Union[str, None] = '0001'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None

@@ -8,8 +8,10 @@ from config import settings
 import models
 import schemas
 import auth
+import generator
 from fastapi.security import OAuth2PasswordRequestForm
-from datetime import timedelta
+from datetime import timedelta, datetime
+import uuid
 
 app = FastAPI(title="Sidequests API")
 
@@ -67,3 +69,47 @@ def health_check(db: Session = Depends(get_db)):
         return {"status": "ok", "db": "connected"}
     except Exception as e:
         return {"status": "error", "detail": str(e)}
+
+@app.get("/api/sidequests", response_model=list[schemas.SidequestResponse])
+def get_sidequests(db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
+    return db.query(models.Sidequest).filter(models.Sidequest.user_id == current_user.id).order_by(models.Sidequest.created_at.desc()).all()
+
+@app.post("/api/sidequests/generate", response_model=schemas.SidequestGenerateResponse)
+def generate_sidequest(current_user: models.User = Depends(auth.get_current_user)):
+    return generator.generate_sidequest(current_user.id)
+
+@app.post("/api/sidequests/accept", response_model=schemas.SidequestResponse)
+def accept_sidequest(quest: schemas.SidequestCreate, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
+    new_quest = models.Sidequest(
+        title=quest.title,
+        description=quest.description,
+        user_id=current_user.id
+    )
+    db.add(new_quest)
+    db.commit()
+    db.refresh(new_quest)
+    return new_quest
+
+@app.post("/api/sidequests/{quest_id}/complete", response_model=schemas.SidequestResponse)
+def complete_sidequest(quest_id: uuid.UUID, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
+    from fastapi import HTTPException
+    quest = db.query(models.Sidequest).filter(models.Sidequest.id == quest_id, models.Sidequest.user_id == current_user.id).first()
+    if not quest:
+        raise HTTPException(status_code=404, detail="Sidequest not found")
+    
+    if not quest.completed_at:
+        quest.completed_at = datetime.utcnow()
+        db.commit()
+        db.refresh(quest)
+    return quest
+
+@app.delete("/api/sidequests/{quest_id}")
+def discard_sidequest(quest_id: uuid.UUID, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
+    from fastapi import HTTPException
+    quest = db.query(models.Sidequest).filter(models.Sidequest.id == quest_id, models.Sidequest.user_id == current_user.id).first()
+    if not quest:
+        raise HTTPException(status_code=404, detail="Sidequest not found")
+    
+    db.delete(quest)
+    db.commit()
+    return {"status": "success"}
