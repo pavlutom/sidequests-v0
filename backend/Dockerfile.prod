@@ -1,18 +1,35 @@
+# Build stage
+FROM python:3.11-slim AS builder
+
+WORKDIR /app
+
+# Install build dependencies if needed
+# RUN apt-get update && apt-get install -y --no-install-recommends gcc g++ && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --user --no-cache-dir -r requirements.txt
+
+# Final stage
 FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Create a non-root user
+RUN groupadd -r app && useradd -r -g app app
 
-# Copy source code
+# Copy installed packages from builder
+COPY --from=builder /root/.local /home/app/.local
 COPY . .
 
-# Expose port
-EXPOSE 8000
+# Ensure start script is executable and owned by app user
+RUN chmod +x start.sh && chown -R app:app /app
 
-# Make start script executable
-RUN chmod +x start.sh
+# Set PATH to include user-installed packages
+ENV PATH=/home/app/.local/bin:$PATH
+ENV PYTHONUNBUFFERED=1
+
+USER app
+
+EXPOSE 8000
 
 CMD ["./start.sh"]

@@ -14,8 +14,8 @@ CLUSTER    ?= sidequests
 FRONTEND_DIR ?= ./frontend
 BACKEND_DIR  ?= ./backend
 
-FRONTEND_IMAGE ?= sidequests-frontend:local
-BACKEND_IMAGE  ?= sidequests-backend:local
+FRONTEND_IMAGE ?= sidequests-frontend:latest
+BACKEND_IMAGE  ?= sidequests-backend:latest
 
 FRONTEND_DOCKERFILE ?= $(FRONTEND_DIR)/Dockerfile.prod
 BACKEND_DOCKERFILE  ?= $(BACKEND_DIR)/Dockerfile.prod
@@ -36,9 +36,12 @@ help:
 	@echo "  kind-create       Create kind cluster (expects kind-config.yaml)"
 	@echo "  kind-delete       Delete kind cluster"
 	@echo ""
+	@echo "  k8s-validate      Dry-run apply all Kubernetes manifests"
+	@echo "  k8s-tls           Generate self-signed TLS certs and create k8s secret"
 	@echo "  k8s-apply         Apply all Kubernetes manifests in ./k8s"
 	@echo "  k8s-up            Build images, load into kind, apply manifests, restart fe/be"
-	@echo "  k8s-down          Delete namespace (removes app resources)"
+	@echo "  k8s-down          Stop workloads (preserves PVCs/Secrets)"
+	@echo "  k8s-purge         Delete namespace (removes EVERYTHING including data)"
 	@echo ""
 	@echo "  fe-build          Build frontend image"
 	@echo "  fe-load           Load frontend image into kind"
@@ -97,7 +100,24 @@ be-load:
 load: fe-load be-load
 
 # ---- Apply manifests ----
-.PHONY: k8s-apply
+.PHONY: k8s-apply k8s-validate
+k8s-validate:
+	kubectl apply --dry-run=client -f $(K8S_DIR)
+
+k8s-tls:
+	@kubectl apply -f $(K8S_DIR)/00-namespace.yaml
+	@if ! kubectl -n $(NAMESPACE) get secret sidequests-tls >/dev/null 2>&1; then \
+		echo "Generating self-signed TLS certificates..."; \
+		openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+			-keyout /tmp/tls.key -out /tmp/tls.crt \
+			-subj "/CN=app.localtest.me"; \
+		kubectl -n $(NAMESPACE) create secret tls sidequests-tls \
+			--key /tmp/tls.key --cert /tmp/tls.crt; \
+		rm /tmp/tls.key /tmp/tls.crt; \
+	else \
+		echo "TLS secret 'sidequests-tls' already exists."; \
+	fi
+
 k8s-apply:
 	kubectl apply -f $(K8S_DIR)
 
@@ -121,21 +141,27 @@ be-redeploy: be-build be-load be-restart
 
 # ---- Full local k8s bring-up ----
 .PHONY: k8s-up
-k8s-up: fe-build be-build load k8s-apply restart
+k8s-up: fe-build be-build load k8s-tls k8s-apply restart
 	@echo ""
 	@echo "Done. Open: http://app.localtest.me"
 	@echo "(If ingress isn't ready yet, wait a few seconds and retry.)"
 
-# ---- Tear down app resources (keeps cluster) ----
-.PHONY: k8s-down
-k8s-down:
+# ---- Stop app workloads (keeps data/secrets) ----
+.PHONY: k8s-stop k8s-down
+k8s-down: k8s-stop
+k8s-stop:
+	kubectl -n $(NAMESPACE) delete deployment,statefulset,hpa,ingress --all --ignore-not-found=true
+
+# ---- Full cleanup (removes everything including data) ----
+.PHONY: k8s-purge
+k8s-purge:
 	kubectl delete namespace $(NAMESPACE) --ignore-not-found=true
 
 # ---- Status + logs ----
 .PHONY: status logs-fe logs-be
 status:
 	@echo "Namespace: $(NAMESPACE)"
-	kubectl -n $(NAMESPACE) get pods,svc,ingress
+	kubectl -n $(NAMESPACE) get pods,svc,ingress,hpa,pdb
 
 logs-fe:
 	kubectl -n $(NAMESPACE) logs deployment/frontend -f --tail=200
