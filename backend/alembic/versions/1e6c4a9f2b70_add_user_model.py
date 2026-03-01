@@ -1,7 +1,7 @@
 """Add User model
 
-Revision ID: 0002
-Revises: 0001
+Revision ID: 1e6c4a9f2b70
+Revises: 7fa3b9d4c812
 Create Date: 2026-02-28 19:20:50.103528
 
 """
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '0002'
-down_revision: Union[str, None] = '0001'
+revision: str = '1e6c4a9f2b70'
+down_revision: Union[str, None] = '7fa3b9d4c812'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
