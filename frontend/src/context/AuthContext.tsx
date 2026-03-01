@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { API_BASE } from '../api';
 
 interface User {
     id: string;
@@ -27,8 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (token) {
             localStorage.setItem('token', token);
             // Fetch user profile
-            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-            fetch(`${apiUrl}/api/auth/me`, {
+            fetch(`${API_BASE}/auth/me`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -59,9 +59,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const refreshUser = async () => {
         if (!token) return;
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
         try {
-            const res = await fetch(`${apiUrl}/api/auth/me`, {
+            const res = await fetch(`${API_BASE}/auth/me`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             if (res.ok) {

@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Navigate } from 'react-router-dom';
+import { API_BASE } from '../api';
 
 interface Sidequest {
     id: string;
@@ -27,11 +28,9 @@ export default function Dashboard() {
     const [loadingAction, setLoadingAction] = useState<boolean>(false);
     const [expandedQuestId, setExpandedQuestId] = useState<string | null>(null);
 
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-
     const fetchSidequests = () => {
         if (!token) return;
-        fetch(`${apiUrl}/api/sidequests`, {
+        fetch(`${API_BASE}/sidequests`, {
             headers: { Authorization: `Bearer ${token}` }
         })
             .then(res => res.json())
@@ -40,7 +39,7 @@ export default function Dashboard() {
     };
 
     useEffect(() => {
-        fetch(`${apiUrl}/api/health`)
+        fetch(`${API_BASE}/health`)
             .then(res => res.json())
             .then(data => {
                 if (data.status === 'ok') setHealthStatus('Backend OK, DB Connected');
@@ -48,7 +47,7 @@ export default function Dashboard() {
             .catch(() => setHealthStatus('Backend Unreachable'));
 
         fetchSidequests();
-    }, [token, apiUrl]);
+    }, [token, API_BASE]);
 
     if (!user) {
         return <Navigate to="/login" />;
@@ -62,7 +61,7 @@ export default function Dashboard() {
     const handleGenerate = async () => {
         setLoadingAction(true);
         try {
-            const res = await fetch(`${apiUrl}/api/sidequests/generate`, {
+            const res = await fetch(`${API_BASE}/sidequests/generate`, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -78,7 +77,7 @@ export default function Dashboard() {
         if (!generatedQuest) return;
         setLoadingAction(true);
         try {
-            await fetch(`${apiUrl}/api/sidequests/accept`, {
+            await fetch(`${API_BASE}/sidequests/accept`, {
                 method: 'POST',
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -97,7 +96,7 @@ export default function Dashboard() {
 
     const handleComplete = async (id: string) => {
         try {
-            await fetch(`${apiUrl}/api/sidequests/${id}/complete`, {
+            await fetch(`${API_BASE}/sidequests/${id}/complete`, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -110,7 +109,7 @@ export default function Dashboard() {
 
     const handleDiscard = async (id: string) => {
         try {
-            await fetch(`${apiUrl}/api/sidequests/${id}`, {
+            await fetch(`${API_BASE}/sidequests/${id}`, {
                 method: 'DELETE',
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -121,11 +120,11 @@ export default function Dashboard() {
     };
 
     const toggleQuestExpansion = (id: string) => {
-        setExpandedQuestId(prev => (prev === id ? null : id));
+        setExpandedQuestId((prev: string | null) => (prev === id ? null : id));
     };
 
-    const activeQuests = sidequests.filter(q => !q.completed_at);
-    const completedQuests = sidequests.filter(q => q.completed_at);
+    const activeQuests = sidequests.filter((q: Sidequest) => !q.completed_at);
+    const completedQuests = sidequests.filter((q: Sidequest) => q.completed_at);
 
     return (
         <div style={{ maxWidth: '800px', margin: '2rem auto', padding: '1rem', fontFamily: 'sans-serif' }}>
@@ -223,8 +222,8 @@ export default function Dashboard() {
                                         transition: 'background-color 0.2s',
                                         opacity: isExpanded ? 1 : 0.8
                                     }}
-                                    onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#f1f5f9')}
-                                    onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#f8fafc')}
+                                    onMouseOver={(e: React.MouseEvent<HTMLDivElement>) => (e.currentTarget.style.backgroundColor = '#f1f5f9')}
+                                    onMouseOut={(e: React.MouseEvent<HTMLDivElement>) => (e.currentTarget.style.backgroundColor = '#f8fafc')}
                                 >
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <div>

@@ -1,3 +1,4 @@
+import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Landing from './pages/Landing';
@@ -6,7 +7,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 
 // A simple wrapper to protect routes
-function ProtectedRoute({ children }: { children: JSX.Element }) {
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
     const { user, loading } = useAuth();
 
     if (loading) {

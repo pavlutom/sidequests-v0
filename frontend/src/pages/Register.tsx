@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE } from '../api';
 
 export default function Register() {
     const [email, setEmail] = useState('');
@@ -18,8 +19,7 @@ export default function Register() {
         setError('');
 
         try {
-            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-            const res = await fetch(`${apiUrl}/api/auth/register`, {
+            const res = await fetch(`${API_BASE}/auth/register`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -34,7 +34,7 @@ export default function Register() {
                 formData.append('username', email);
                 formData.append('password', password);
 
-                const loginRes = await fetch(`${apiUrl}/api/auth/login`, {
+                const loginRes = await fetch(`${API_BASE}/auth/login`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -42,7 +42,7 @@ export default function Register() {
                     body: formData.toString(),
                 });
 
-                const loginData = await loginRes.json();
+                await loginRes.json(); // Consume the response
                 if (loginRes.ok) {
                     // You must import useAuth higher up to use it, let's fix login function call in this context
                     // Navigate to login for simple flow
@@ -53,7 +53,7 @@ export default function Register() {
             } else {
                 setError(data.detail || 'Failed to register');
             }
-        } catch (err) {
+        } catch {
             setError('An error occurred. Please try again.');
         }
     };

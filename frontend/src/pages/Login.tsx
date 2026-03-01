@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE } from '../api';
 
 export default function Login() {
     const [email, setEmail] = useState('');
@@ -18,12 +19,11 @@ export default function Login() {
         setError('');
 
         try {
-            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
             const formData = new URLSearchParams();
             formData.append('username', email); // OAuth2 expects 'username' field
             formData.append('password', password);
 
-            const res = await fetch(`${apiUrl}/api/auth/login`, {
+            const res = await fetch(`${API_BASE}/auth/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -38,7 +38,7 @@ export default function Login() {
             } else {
                 setError(data.detail || 'Failed to login');
             }
-        } catch (err) {
+        } catch {
             setError('An error occurred. Please try again.');
         }
     };
