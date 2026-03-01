@@ -1,7 +1,7 @@
 """Add sidequest core properties
 
-Revision ID: 8b64548aa9ac
-Revises: a18c9446c5c7
+Revision ID: 0003
+Revises: 0002
 Create Date: 2026-02-28 19:51:07.950551
 
 """
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '8b64548aa9ac'
-down_revision: Union[str, None] = 'a18c9446c5c7'
+revision: str = '0003'
+down_revision: Union[str, None] = '0002'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
