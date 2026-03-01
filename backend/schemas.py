@@ -10,6 +10,7 @@ class UserCreate(UserBase):
 
 class UserResponse(UserBase):
     id: uuid.UUID
+    total_xp: int
     created_at: datetime
 
     class Config:
@@ -26,6 +27,7 @@ class TokenData(BaseModel):
 class SidequestBase(BaseModel):
     title: str
     description: str | None = None
+    reward_xp: int
 
 class SidequestCreate(SidequestBase):
     pass
@@ -42,3 +44,4 @@ class SidequestResponse(SidequestBase):
 class SidequestGenerateResponse(BaseModel):
     title: str
     description: str
+    reward_xp: int

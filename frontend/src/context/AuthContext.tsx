@@ -3,6 +3,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 interface User {
     id: string;
     email: string;
+    total_xp: number;
     created_at: string;
 }
 
@@ -11,6 +12,7 @@ interface AuthContextType {
     token: string | null;
     login: (token: string) => void;
     logout: () => void;
+    refreshUser: () => Promise<void>;
     loading: boolean;
 }
 
@@ -55,8 +57,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setToken(null);
     };
 
+    const refreshUser = async () => {
+        if (!token) return;
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+        try {
+            const res = await fetch(`${apiUrl}/api/auth/me`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setUser(data);
+            }
+        } catch (err) {
+            console.error("Error refreshing user", err);
+        }
+    };
+
     return (
-        <AuthContext.Provider value={{ user, token, login, logout, loading }}>
+        <AuthContext.Provider value={{ user, token, login, logout, refreshUser, loading }}>
             {children}
         </AuthContext.Provider>
     );

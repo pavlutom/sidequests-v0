@@ -23,12 +23,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+from database import SessionLocal, engine, get_db
 
 @app.post("/api/auth/register", response_model=schemas.UserResponse)
 def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
@@ -83,6 +78,7 @@ def accept_sidequest(quest: schemas.SidequestCreate, db: Session = Depends(get_d
     new_quest = models.Sidequest(
         title=quest.title,
         description=quest.description,
+        reward_xp=quest.reward_xp,
         user_id=current_user.id
     )
     db.add(new_quest)
@@ -99,8 +95,11 @@ def complete_sidequest(quest_id: uuid.UUID, db: Session = Depends(get_db), curre
     
     if not quest.completed_at:
         quest.completed_at = datetime.utcnow()
+        db.add(current_user)
+        current_user.total_xp += quest.reward_xp
         db.commit()
         db.refresh(quest)
+        db.refresh(current_user)
     return quest
 
 @app.delete("/api/sidequests/{quest_id}")

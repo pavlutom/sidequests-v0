@@ -6,6 +6,7 @@ interface Sidequest {
     id: string;
     title: string;
     description: string;
+    reward_xp: number;
     created_at: string;
     completed_at: string | null;
 }
@@ -13,10 +14,11 @@ interface Sidequest {
 interface GeneratedQuest {
     title: string;
     description: string;
+    reward_xp: number;
 }
 
 export default function Dashboard() {
-    const { user, logout, token } = useAuth();
+    const { user, logout, token, refreshUser } = useAuth();
     const navigate = useNavigate();
 
     const [healthStatus, setHealthStatus] = useState<string>('Checking backend...');
@@ -86,6 +88,7 @@ export default function Dashboard() {
             });
             setGeneratedQuest(null);
             fetchSidequests();
+            refreshUser();
         } catch (e) {
             console.error(e);
         }
@@ -99,6 +102,7 @@ export default function Dashboard() {
                 headers: { Authorization: `Bearer ${token}` }
             });
             fetchSidequests();
+            refreshUser();
         } catch (e) {
             console.error(e);
         }
@@ -127,12 +131,18 @@ export default function Dashboard() {
         <div style={{ maxWidth: '800px', margin: '2rem auto', padding: '1rem', fontFamily: 'sans-serif' }}>
             <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e5e7eb', paddingBottom: '1rem' }}>
                 <h1 style={{ margin: 0 }}>Sidequests Dashboard</h1>
-                <button
-                    onClick={handleLogout}
-                    style={{ padding: '0.5rem 1rem', background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca', borderRadius: '4px', cursor: 'pointer' }}
-                >
-                    Logout
-                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                    <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '0.875rem', color: '#64748b' }}>Total XP Balance</div>
+                        <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#b45309' }}>✨ {user.total_xp}</div>
+                    </div>
+                    <button
+                        onClick={handleLogout}
+                        style={{ padding: '0.5rem 1rem', background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca', borderRadius: '4px', cursor: 'pointer' }}
+                    >
+                        Logout
+                    </button>
+                </div>
             </header>
 
             <main style={{ marginTop: '2rem' }}>
@@ -141,7 +151,10 @@ export default function Dashboard() {
                     {generatedQuest ? (
                         <>
                             <h2 style={{ marginTop: 0, color: '#1e3a8a' }}>{generatedQuest.title}</h2>
-                            <p style={{ color: '#1e40af', fontSize: '1.1rem' }}>{generatedQuest.description}</p>
+                            <div style={{ display: 'inline-block', background: '#fef3c7', color: '#92400e', padding: '0.25rem 0.75rem', borderRadius: '999px', fontSize: '0.875rem', fontWeight: 'bold', border: '1px solid #fde68a', marginBottom: '1rem' }}>
+                                ✨ {generatedQuest.reward_xp} XP
+                            </div>
+                            <p style={{ color: '#1e40af', fontSize: '1.1rem', margin: '0 0 1.5rem 0' }}>{generatedQuest.description}</p>
                             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1.5rem' }}>
                                 <button onClick={handleAccept} disabled={loadingAction} style={{ padding: '0.75rem 1.5rem', background: '#2563eb', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
                                     Accept Quest
@@ -169,7 +182,12 @@ export default function Dashboard() {
                     <div style={{ display: 'grid', gap: '1rem', marginBottom: '2rem' }}>
                         {activeQuests.map(quest => (
                             <div key={quest.id} style={{ padding: '1.25rem', border: '1px solid #e2e8f0', borderRadius: '8px', background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-                                <h3 style={{ margin: '0 0 0.5rem 0' }}>{quest.title}</h3>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                                    <h3 style={{ margin: 0 }}>{quest.title}</h3>
+                                    <span style={{ background: '#fef3c7', color: '#92400e', padding: '0.2rem 0.6rem', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 'bold', border: '1px solid #fde68a', whiteSpace: 'nowrap' }}>
+                                        {quest.reward_xp} XP
+                                    </span>
+                                </div>
                                 <p style={{ margin: '0 0 1.5rem 0', color: '#475569' }}>{quest.description}</p>
                                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                                     <button onClick={() => handleComplete(quest.id)} style={{ padding: '0.5rem 1rem', background: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
@@ -210,8 +228,11 @@ export default function Dashboard() {
                                 >
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <div>
-                                            <h4 style={{ margin: '0 0 0.25rem 0', color: '#334155', textDecoration: 'line-through' }}>{quest.title}</h4>
-                                            <p style={{ margin: 0, fontSize: '0.875rem', color: '#64748b' }}>Completed on: {new Date(quest.completed_at!).toLocaleDateString()}</p>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                <h4 style={{ margin: 0, color: '#334155', textDecoration: 'line-through' }}>{quest.title}</h4>
+                                                <span style={{ fontSize: '0.75rem', color: '#92400e', fontWeight: 'bold' }}>+{quest.reward_xp} XP</span>
+                                            </div>
+                                            <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.875rem', color: '#64748b' }}>Completed on: {new Date(quest.completed_at!).toLocaleDateString()}</p>
                                         </div>
                                         <div style={{ color: '#94a3b8', fontSize: '1.25rem', transform: isExpanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
                                             ▼
