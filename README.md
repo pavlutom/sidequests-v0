@@ -31,7 +31,7 @@ The project is built with a **decoupled microservices architecture** designed fo
    ```
 3. Access:
    - Frontend: [http://localhost:5173](http://localhost:5173)
-   - Backend API: [http://localhost:8000/docs](http://localhost:8000/docs)
+   - Backend API: [http://localhost:8000/api/docs](http://localhost:8000/api/docs)
 
 ### Option 2: Kubernetes (Production-Ready Setup)
 We use `kind` for local Kubernetes development. 
