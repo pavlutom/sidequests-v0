@@ -1,0 +1,102 @@
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "sidequests.fullname" . }}-allow-ingress-to-frontend
+  labels:
+    {{- include "sidequests.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "sidequests.selectorLabels" . | nindent 6 }}
+      app: frontend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "sidequests.fullname" . }}-allow-ingress-to-backend
+  labels:
+    {{- include "sidequests.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "sidequests.selectorLabels" . | nindent 6 }}
+      app: backend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 8000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "sidequests.fullname" . }}-allow-frontend-to-backend
+  labels:
+    {{- include "sidequests.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "sidequests.selectorLabels" . | nindent 6 }}
+      app: backend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "sidequests.selectorLabels" . | nindent 14 }}
+              app: frontend
+      ports:
+        - protocol: TCP
+          port: 8000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "sidequests.fullname" . }}-allow-backend-to-db
+  labels:
+    {{- include "sidequests.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "sidequests.selectorLabels" . | nindent 6 }}
+      app: db
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "sidequests.selectorLabels" . | nindent 14 }}
+              app: backend
+      ports:
+        - protocol: TCP
+          port: 5432
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "sidequests.fullname" . }}-deny-all-ingress
+  labels:
+    {{- include "sidequests.labels" . | nindent 4 }}
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+{{- end }}

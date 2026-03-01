@@ -8,7 +8,9 @@
 SHELL := /bin/bash
 
 # ---- Config (adjust if your names differ) ----
-NAMESPACE ?= sidequests
+HELM_CHART = ./helm/sidequests
+HELM_RELEASE = sidequests
+NAMESPACE = sidequests
 CLUSTER    ?= sidequests
 
 FRONTEND_DIR ?= ./frontend
@@ -24,7 +26,7 @@ BACKEND_DOCKERFILE  ?= $(BACKEND_DIR)/Dockerfile.prod
 VITE_API_URL ?= /api
 
 # K8s manifests folder
-K8S_DIR ?= ./k8s
+# K8S_DIR ?= ./k8s # Replaced by HELM_CHART
 
 # ---- Helpers ----
 .PHONY: help
@@ -36,10 +38,10 @@ help:
 	@echo "  kind-create       Create kind cluster (expects kind-config.yaml)"
 	@echo "  kind-delete       Delete kind cluster"
 	@echo ""
-	@echo "  k8s-validate      Dry-run apply all Kubernetes manifests"
+	@echo "  k8s-validate      Lints the Helm chart"
 	@echo "  k8s-tls           Generate self-signed TLS certs and create k8s secret"
-	@echo "  k8s-apply         Apply all Kubernetes manifests in ./k8s"
-	@echo "  k8s-up            Build images, load into kind, apply manifests, restart fe/be"
+	@echo "  k8s-apply         Deploy the application using Helm"
+	@echo "  k8s-up            Build, load, and deploy everything via Helm"
 	@echo "  k8s-down          Stop workloads (preserves PVCs/Secrets)"
 	@echo "  k8s-purge         Delete namespace (removes EVERYTHING including data)"
 	@echo ""
@@ -102,10 +104,11 @@ load: fe-load be-load
 # ---- Apply manifests ----
 .PHONY: k8s-apply k8s-validate
 k8s-validate:
-	kubectl apply --dry-run=client -f $(K8S_DIR)
+	helm lint $(HELM_CHART)
+	helm template $(HELM_RELEASE) $(HELM_CHART) --namespace $(NAMESPACE)
 
 k8s-tls:
-	@kubectl apply -f $(K8S_DIR)/00-namespace.yaml
+	@kubectl create namespace $(NAMESPACE) --dry-run=client -o yaml | kubectl apply -f -
 	@if ! kubectl -n $(NAMESPACE) get secret sidequests-tls >/dev/null 2>&1; then \
 		echo "Generating self-signed TLS certificates..."; \
 		openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
@@ -119,17 +122,19 @@ k8s-tls:
 	fi
 
 k8s-apply:
-	kubectl apply -f $(K8S_DIR)
+	helm upgrade --install $(HELM_RELEASE) $(HELM_CHART) \
+		--namespace $(NAMESPACE) \
+		--create-namespace
 
 # ---- Restarts (needed when image tag stays the same) ----
 .PHONY: fe-restart be-restart restart
 fe-restart:
-	kubectl -n $(NAMESPACE) rollout restart deployment/frontend
-	kubectl -n $(NAMESPACE) rollout status deployment/frontend
+	kubectl -n $(NAMESPACE) rollout restart deployment/$(HELM_RELEASE)-frontend
+	kubectl -n $(NAMESPACE) rollout status deployment/$(HELM_RELEASE)-frontend
 
 be-restart:
-	kubectl -n $(NAMESPACE) rollout restart deployment/backend
-	kubectl -n $(NAMESPACE) rollout status deployment/backend
+	kubectl -n $(NAMESPACE) rollout restart deployment/$(HELM_RELEASE)-backend
+	kubectl -n $(NAMESPACE) rollout status deployment/$(HELM_RELEASE)-backend
 
 restart: fe-restart be-restart
 
@@ -155,6 +160,7 @@ k8s-stop:
 # ---- Full cleanup (removes everything including data) ----
 .PHONY: k8s-purge
 k8s-purge:
+	-helm uninstall $(HELM_RELEASE) --namespace $(NAMESPACE)
 	kubectl delete namespace $(NAMESPACE) --ignore-not-found=true
 
 # ---- Status + logs ----
@@ -164,7 +170,7 @@ status:
 	kubectl -n $(NAMESPACE) get pods,svc,ingress,hpa,pdb
 
 logs-fe:
-	kubectl -n $(NAMESPACE) logs deployment/frontend -f --tail=200
+	kubectl -n $(NAMESPACE) logs deployment/$(HELM_RELEASE)-frontend -f --tail=200
 
 logs-be:
-	kubectl -n $(NAMESPACE) logs deployment/backend -f --tail=200
+	kubectl -n $(NAMESPACE) logs deployment/$(HELM_RELEASE)-backend -f --tail=200

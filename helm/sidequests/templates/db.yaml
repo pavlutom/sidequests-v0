@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "sidequests.fullname" . }}-db-secret
+  labels:
+    {{- include "sidequests.labels" . | nindent 4 }}
+type: Opaque
+stringData:
+  POSTGRES_USER: {{ .Values.postgres.auth.user | quote }}
+  POSTGRES_PASSWORD: {{ .Values.postgres.auth.password | quote }}
+  POSTGRES_DB: {{ .Values.postgres.auth.database | quote }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "sidequests.fullname" . }}-db-pvc
+  labels:
+    {{- include "sidequests.labels" . | nindent 4 }}
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: {{ .Values.postgres.persistence.size | quote }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "sidequests.fullname" . }}-db
+  labels:
+    {{- include "sidequests.labels" . | nindent 4 }}
+spec:
+  selector:
+    {{- include "sidequests.selectorLabels" . | nindent 4 }}
+    app: db
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "sidequests.fullname" . }}-db
+  labels:
+    {{- include "sidequests.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "sidequests.fullname" . }}-db
+  selector:
+    matchLabels:
+      {{- include "sidequests.selectorLabels" . | nindent 6 }}
+      app: db
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        {{- include "sidequests.selectorLabels" . | nindent 8 }}
+        app: db
+    spec:
+      securityContext:
+        fsGroup: 70
+      containers:
+        - name: postgres
+          image: "{{ .Values.postgres.image.repository }}:{{ .Values.postgres.image.tag }}"
+          imagePullPolicy: {{ .Values.postgres.image.pullPolicy }}
+          ports:
+            - containerPort: 5432
+          envFrom:
+            - secretRef:
+                name: {{ include "sidequests.fullname" . }}-db-secret
+          resources:
+            {{- toYaml .Values.postgres.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+              subPath: postgres
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "sidequests.fullname" . }}-db-pvc

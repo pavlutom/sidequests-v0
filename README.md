@@ -7,14 +7,14 @@ The project is built with a **decoupled microservices architecture** designed fo
 
 - **Backend**: A FastAPI-powered REST API with JWT authentication and PostgreSQL persistence.
 - **Frontend**: A modern React (Vite + TypeScript) Single Page Application (SPA), served by a dedicated local Nginx server for optimized static file delivery.
-- **Infrastructure**: Fully containerized with Docker and ready for Kubernetes (kind) with Nginx Ingress routing.
+- **Infrastructure**: Fully containerized with Docker and orchestrated with **Helm** on Kubernetes (kind) with Nginx Ingress routing and self-signed TLS.
 
 ---
 
 ## 🛠️ Stack
 - **Backend**: FastAPI, SQLAlchemy 2.0 (async ready), Alembic (migrations), PostgreSQL.
 - **Frontend**: React 18, Vite, TypeScript, Vanilla CSS.
-- **Infrastructure**: Kubernetes (Kind), Nginx Ingress, Docker Compose.
+- **Infrastructure**: Kubernetes (Kind), Helm 3, Nginx Ingress, Docker Compose.
 
 ---
 
@@ -34,7 +34,7 @@ The project is built with a **decoupled microservices architecture** designed fo
    - Backend API: [http://localhost:8000/api/docs](http://localhost:8000/api/docs)
 
 ### Option 2: Kubernetes (Production-Ready Setup)
-We use `kind` for local Kubernetes development. 
+We use `kind` and `helm` for local Kubernetes development. 
 
 1. **Create the cluster**:
    ```bash
@@ -45,21 +45,27 @@ We use `kind` for local Kubernetes development.
    make k8s-up
    ```
 3. **Access**:
-   The app is available at **[http://app.localtest.me](http://app.localtest.me)**.
-   *(The Ingress controller routes `/api` to the backend and `/` to the frontend).*
+   The app is available at **[https://app.localtest.me](https://app.localtest.me)**.
+   *(The Makefile automatically generates self-signed TLS certificates for local use).*
 
 ---
 
 ## 📁 Project Structure
 - `/backend`: Python FastAPI code, SQLAlchemy models, and Alembic migrations.
 - `/frontend`: React source code and `nginx.conf` for serving the SPA.
-- `/k8s`: Kubernetes manifests (Deployments, Services, Ingress, PersistentVolumes).
-- `Makefile`: Command shortcuts for the K8s workflow.
+- `/helm`: Helm 3 charts for the entire application.
+- `/k8s`: (Legacy) Static Kubernetes manifests.
+- `Makefile`: Command shortcuts for building, loading, and deploying via Helm.
 
 ---
 
-## 📜 Key Features
-- **User XP Aggregation**: Completing sidequests updates your persistence XP balance in the database.
-- **Automated Sidequest Generation**: Requesting a quest generates a random challenge with an XP reward.
-- **Alembic Migrations**: Fully versioned database schema with sequential numbering.
-- **SPA Routing Support**: Custom Nginx configuration handles client-side routing (`/login`, `/dashboard`) seamlessly.
+## ✨ Core Features (Player Experience)
+- **RPG-Style Progression**: Earn XP and level up by completing real-world tasks.
+- **Automated Sidequest Generation**: Dynamic quest creation with variable XP rewards and challenges.
+- **Persistent XP Tracking**: Real-time aggregation of player progress in a secure PostgreSQL database.
+
+## 🛠️ Technical Highlights
+- **Helm-Powered Orchestration**: Enterprise-grade deployment management using Helm 3 with centralized `values.yaml` configuration.
+- **Automated TLS & HTTPS**: Built-in self-signed certificate generation for local production-like environments.
+- **Robust Database Migrations**: Fully versioned schema evolution using Alembic with sequential numbering.
+- **Optimized SPA Serving**: Dedicated Nginx configuration for the React frontend, handling client-side routing and static assets with ease.
