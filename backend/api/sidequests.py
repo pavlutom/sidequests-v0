@@ -5,7 +5,7 @@ import uuid
 import models
 import schemas
 import auth
-import generator
+import generators
 from database import get_db
 
 router = APIRouter(prefix="/sidequests", tags=["sidequests"])
@@ -15,8 +15,8 @@ def get_sidequests(db: Session = Depends(get_db), current_user: models.User = De
     return db.query(models.Sidequest).filter(models.Sidequest.user_id == current_user.id).order_by(models.Sidequest.created_at.desc()).all()
 
 @router.post("/generate", response_model=schemas.SidequestGenerateResponse)
-def generate_sidequest(current_user: models.User = Depends(auth.get_current_user)):
-    return generator.generate_sidequest(current_user.id)
+def generate_sidequest(preferences: schemas.SidequestPreferences, current_user: models.User = Depends(auth.get_current_user)):
+    return generators.generate_sidequest(current_user.id, preferences.model_dump())
 
 @router.post("/accept", response_model=schemas.SidequestResponse)
 def accept_sidequest(quest: schemas.SidequestCreate, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):

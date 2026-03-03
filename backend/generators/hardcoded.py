@@ -1,5 +1,6 @@
 import random
-import uuid
+from typing import Dict, Any
+from .base import BaseGenerator
 
 # Hardcoded list of sidequests for the MVP
 # Later, this will be replaced with an AI generation endpoint
@@ -36,16 +37,15 @@ SIDEQUESTS = [
     }
 ]
 
-def generate_sidequest(user_id: uuid.UUID) -> dict:
-    """
-    Generates a new sidequest for the user.
-    Currently returns a random choice from a hardcoded list.
-    """
-    # Simply pick a random quest from our list
-    quest = random.choice(SIDEQUESTS)
-    
-    return {
-        "title": quest["title"],
-        "description": quest["description"],
-        "reward_xp": quest["reward_xp"]
-    }
+class HardcodedGenerator(BaseGenerator):
+    def generate(self, preferences: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Generates a random sidequest from a hardcoded list.
+        Ignores preferences for now to maintain backward compatibility/fallback.
+        """
+        quest = random.choice(SIDEQUESTS)
+        return {
+            "title": quest["title"],
+            "description": quest["description"],
+            "reward_xp": quest["reward_xp"]
+        }

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 import uuid
 from datetime import datetime
 
@@ -13,8 +13,7 @@ class UserResponse(UserBase):
     total_xp: int
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class Token(BaseModel):
     access_token: str
@@ -22,6 +21,11 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     email: str | None = None
+
+class SidequestPreferences(BaseModel):
+    categories: list[str] = ["fun"]
+    estimated_cost: str = "minimal"
+    goal: str = "fun"
 
 # Sidequest Schemas
 class SidequestBase(BaseModel):
@@ -38,10 +42,14 @@ class SidequestResponse(SidequestBase):
     created_at: datetime
     completed_at: datetime | None = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class SidequestGenerateResponse(BaseModel):
     title: str
     description: str
     reward_xp: int
+    tags: list[str] = []
+
+class GeneratorConfig(BaseModel):
+    generator_type: str
+    openai_model: str | None = None

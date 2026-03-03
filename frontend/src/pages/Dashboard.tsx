@@ -16,6 +16,13 @@ interface GeneratedQuest {
     title: string;
     description: string;
     reward_xp: number;
+    tags?: string[];
+}
+
+interface Preferences {
+    categories: string[];
+    estimated_cost: string;
+    goal: string;
 }
 
 export default function Dashboard() {
@@ -27,6 +34,12 @@ export default function Dashboard() {
     const [generatedQuest, setGeneratedQuest] = useState<GeneratedQuest | null>(null);
     const [loadingAction, setLoadingAction] = useState<boolean>(false);
     const [expandedQuestId, setExpandedQuestId] = useState<string | null>(null);
+    const [preferences, setPreferences] = useState<Preferences>({
+        categories: ['social'],
+        estimated_cost: 'minimal',
+        goal: 'fun'
+    });
+    const [generatorConfig, setGeneratorConfig] = useState<{ generator_type: string, openai_model?: string } | null>(null);
 
     const fetchSidequests = () => {
         if (!token) return;
@@ -43,6 +56,7 @@ export default function Dashboard() {
             .then(res => res.json())
             .then(data => {
                 if (data.status === 'ok') setHealthStatus('Backend OK, DB Connected');
+                if (data.generator_config) setGeneratorConfig(data.generator_config);
             })
             .catch(() => setHealthStatus('Backend Unreachable'));
 
@@ -63,7 +77,11 @@ export default function Dashboard() {
         try {
             const res = await fetch(`${API_BASE}/sidequests/generate`, {
                 method: 'POST',
-                headers: { Authorization: `Bearer ${token}` }
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(preferences)
             });
             const data = await res.json();
             setGeneratedQuest(data);
@@ -165,9 +183,57 @@ export default function Dashboard() {
                         </>
                     ) : (
                         <>
-                            <h2 style={{ marginTop: 0, color: '#1e3a8a' }}>Looking for something to do?</h2>
-                            <button onClick={handleGenerate} disabled={loadingAction} style={{ padding: '0.75rem 1.5rem', background: '#2563eb', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', marginTop: '1rem' }}>
-                                Request a Sidequest
+                            <h2 style={{ marginTop: 0, color: '#1e3a8a' }}>What are you in the mood for?</h2>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '1.5rem', textAlign: 'left' }}>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 'bold', color: '#475569', marginBottom: '0.5rem' }}>Categories</label>
+                                    <select
+                                        multiple
+                                        value={preferences.categories}
+                                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setPreferences({
+                                            ...preferences,
+                                            categories: Array.from(e.target.selectedOptions, (option: HTMLOptionElement) => option.value)
+                                        })}
+                                        style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #cbd5e1' }}
+                                    >
+                                        <option value="social">Social</option>
+                                        <option value="outdoors">Outdoors</option>
+                                        <option value="family">Family Time</option>
+                                        <option value="productivity">Productivity</option>
+                                        <option value="health">Health & Wellness</option>
+                                        <option value="learning">Skill Learning</option>
+                                    </select>
+                                    <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem' }}>Hold Ctrl/Cmd to select multiple</p>
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 'bold', color: '#475569', marginBottom: '0.5rem' }}>Estimated Cost</label>
+                                    <select
+                                        value={preferences.estimated_cost}
+                                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setPreferences({ ...preferences, estimated_cost: e.target.value })}
+                                        style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #cbd5e1' }}
+                                    >
+                                        <option value="minimal">Minimal ($0)</option>
+                                        <option value="some">Some ($1-20)</option>
+                                        <option value="significant">Significant ($20+)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 'bold', color: '#475569', marginBottom: '0.5rem' }}>Primary Goal</label>
+                                    <select
+                                        value={preferences.goal}
+                                        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setPreferences({ ...preferences, goal: e.target.value })}
+                                        style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #cbd5e1' }}
+                                    >
+                                        <option value="fun">Just Fun</option>
+                                        <option value="growth">Personal Growth</option>
+                                        <option value="learning">Learning</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <button onClick={handleGenerate} disabled={loadingAction} style={{ padding: '0.75rem 1.5rem', background: '#2563eb', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', marginTop: '0.5rem' }}>
+                                {loadingAction ? 'Generating...' : 'Generate Sidequest'}
                             </button>
                         </>
                     )}
@@ -253,6 +319,12 @@ export default function Dashboard() {
                     <h3 style={{ marginTop: 0, fontSize: '1rem', color: '#64748b' }}>System Diagnostics</h3>
                     <p style={{ color: '#64748b', margin: '0.25rem 0' }}>User ID: <code>{user.id}</code></p>
                     <p style={{ color: '#64748b', margin: '0.25rem 0' }}>Backend API: {healthStatus}</p>
+                    {generatorConfig && (
+                        <p style={{ color: '#64748b', margin: '0.25rem 0' }}>
+                            Generator: <code>{generatorConfig.generator_type}</code>
+                            {generatorConfig.openai_model && <span> ({generatorConfig.openai_model})</span>}
+                        </p>
+                    )}
                 </div>
             </main>
         </div>
