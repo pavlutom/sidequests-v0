@@ -9,6 +9,21 @@ data:
   DATABASE_PORT: {{ .Values.backend.config.databasePort | quote }}
   DATABASE_NAME: {{ .Values.backend.config.databaseName | quote }}
   CORS_ORIGINS: {{ .Values.backend.config.corsOrigins | quote }}
+  DEBUG: {{ .Values.backend.config.debug | quote }}
+  ACCESS_TOKEN_EXPIRE_MINUTES: {{ .Values.backend.config.accessTokenExpireMinutes | quote }}
+  GENERATOR_TYPE: {{ .Values.backend.config.generatorType | quote }}
+  OPENAI_MODEL: {{ .Values.backend.config.openaiModel | quote }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "sidequests.fullname" . }}-backend-secret
+  labels:
+    {{- include "sidequests.labels" . | nindent 4 }}
+type: Opaque
+stringData:
+  SECRET_KEY: {{ .Values.backend.secrets.secretKey | quote }}
+  OPENAI_API_KEY: {{ .Values.backend.secrets.openaiApiKey | quote }}
 ---
 apiVersion: v1
 kind: Service
@@ -56,17 +71,24 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ include "sidequests.fullname" . }}-backend-config
+            - secretRef:
+                name: {{ include "sidequests.fullname" . }}-backend-secret
           env:
-            - name: DATABASE_USER
+            - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
                   name: {{ include "sidequests.fullname" . }}-db-secret
                   key: POSTGRES_USER
-            - name: DATABASE_PASSWORD
+            - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ include "sidequests.fullname" . }}-db-secret
                   key: POSTGRES_PASSWORD
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "sidequests.fullname" . }}-db-secret
+                  key: POSTGRES_DB
           resources:
             {{- toYaml .Values.backend.resources | nindent 12 }}
           readinessProbe:

@@ -21,6 +21,13 @@ backend:
     databasePort: "5432"
     databaseName: "sidequests"
     corsOrigins: '["https://app.localtest.me"]'
+    debug: "false"
+    accessTokenExpireMinutes: "10080"
+    generatorType: "hardcoded"
+    openaiModel: ""
+  secrets:
+    secretKey: "yoursecretkeyhere"
+    openaiApiKey: "your_openai_api_key_here"
 
 frontend:
   replicaCount: 2
@@ -28,6 +35,8 @@ frontend:
     repository: sidequests-frontend
     tag: latest
     pullPolicy: IfNotPresent
+  config:
+    viteApiUrl: "https://app.localtest.me/api"
   resources:
     requests:
       cpu: 50m

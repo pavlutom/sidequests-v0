@@ -6,8 +6,8 @@ WORKDIR /app
 # Install build dependencies if needed
 # RUN apt-get update && apt-get install -y --no-install-recommends gcc g++ && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
-RUN pip install --user --no-cache-dir -r requirements.txt
+COPY requirements/ requirements/
+RUN pip install --user --no-cache-dir -r requirements/prod.txt
 
 # Final stage
 FROM python:3.11-slim

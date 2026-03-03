@@ -40,8 +40,9 @@ help:
 	@echo ""
 	@echo "  k8s-validate      Lints the Helm chart"
 	@echo "  k8s-tls           Generate self-signed TLS certs and create k8s secret"
+	@echo "  k8s-ingress       Install Nginx Ingress Controller for kind"
 	@echo "  k8s-apply         Deploy the application using Helm"
-	@echo "  k8s-up            Build, load, and deploy everything via Helm"
+	@echo "  k8s-up            Build, load, and deploy everything (including Ingress)"
 	@echo "  k8s-down          Stop workloads (preserves PVCs/Secrets)"
 	@echo "  k8s-purge         Delete namespace (removes EVERYTHING including data)"
 	@echo ""
@@ -121,6 +122,15 @@ k8s-tls:
 		echo "TLS secret 'sidequests-tls' already exists."; \
 	fi
 
+k8s-ingress:
+	@echo "Installing Nginx Ingress Controller..."
+	@kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
+	@echo "Waiting for Ingress Controller to be ready..."
+	@kubectl wait --namespace ingress-nginx \
+		--for=condition=ready pod \
+		--selector=app.kubernetes.io/component=controller \
+		--timeout=90s
+
 k8s-apply:
 	helm upgrade --install $(HELM_RELEASE) $(HELM_CHART) \
 		--namespace $(NAMESPACE) \
@@ -146,9 +156,9 @@ be-redeploy: be-build be-load be-restart
 
 # ---- Full local k8s bring-up ----
 .PHONY: k8s-up
-k8s-up: fe-build be-build load k8s-tls k8s-apply restart
+k8s-up: fe-build be-build load k8s-ingress k8s-tls k8s-apply restart
 	@echo ""
-	@echo "Done. Open: http://app.localtest.me"
+	@echo "Done. Open: https://app.localtest.me"
 	@echo "(If ingress isn't ready yet, wait a few seconds and retry.)"
 
 # ---- Stop app workloads (keeps data/secrets) ----

@@ -20,16 +20,20 @@ The project is built with a **decoupled microservices architecture** designed fo
 
 ## 🏃 Getting Started
 
-### Option 1: Docker Compose (Easiest for Dev)
-1. Copy the example environment variables:
+### Option 1: Docker Compose (Recommended for Dev)
+1. Copy the example environment variables to the project root:
    ```bash
    cp .env.example .env
    ```
-2. Build and run:
+2. Build and run the stack:
    ```bash
    docker compose up --build
    ```
-3. Access:
+3. Run tests inside the container:
+   ```bash
+   docker compose exec -e PYTHONPATH=. backend pytest
+   ```
+4. Access:
    - Frontend: [http://localhost:5173](http://localhost:5173)
    - Backend API: [http://localhost:8000/api/docs](http://localhost:8000/api/docs)
 
@@ -40,22 +44,22 @@ We use `kind` and `helm` for local Kubernetes development.
    ```bash
    make kind-create
    ```
-2. **Deploy the full stack**:
+2. **Deploy via Helm**:
    ```bash
    make k8s-up
    ```
 3. **Access**:
    The app is available at **[https://app.localtest.me](https://app.localtest.me)**.
-   *(The Makefile automatically generates self-signed TLS certificates for local use).*
+   *(The Makefile generates self-signed TLS certificates and manages Helm secrets).*
 
 ---
 
 ## 📁 Project Structure
-- `/backend`: Python FastAPI code, SQLAlchemy models, and Alembic migrations.
-- `/frontend`: React source code and `nginx.conf` for serving the SPA.
-- `/helm`: Helm 3 charts for the entire application.
-- `/k8s`: (Legacy) Static Kubernetes manifests.
-- `Makefile`: Command shortcuts for building, loading, and deploying via Helm.
+- `/backend`: Python FastAPI application, SQLAlchemy models, and Alembic migrations.
+- `/frontend`: React SPA source code and Nginx configuration.
+- `/helm`: Helm 3 charts (unified configuration in `values.yaml`).
+- `Makefile`: Shortcuts for building, testing, and Kubernetes orchestration.
+- `.env`: Centralized environment configuration for all services.
 
 ---
 
