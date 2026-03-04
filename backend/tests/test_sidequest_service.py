@@ -103,3 +103,41 @@ def test_complete_sidequest_rewards_xp(db, test_user):
     completed = sidequest_service.complete_sidequest(db, test_user, quest.id)
     assert completed.completed_at is not None
     assert test_user.total_xp == initial_xp + 50
+
+def test_accept_sidequest_not_found(db, test_user):
+    # Try to accept a non-existent quest
+    fake_id = uuid.uuid4()
+    result = sidequest_service.accept_sidequest(db, test_user.id, fake_id)
+    assert result is None
+
+def test_complete_sidequest_not_found(db, test_user):
+    # Try to complete a non-existent quest
+    fake_id = uuid.uuid4()
+    result = sidequest_service.complete_sidequest(db, test_user, fake_id)
+    assert result is None
+
+def test_discard_sidequest_success(db, test_user):
+    quest = models.Sidequest(
+        id=uuid.uuid4(),
+        title="To Discard",
+        description="Testing",
+        reward_xp=10,
+        user_id=test_user.id,
+        accepted_at=None
+    )
+    db.add(quest)
+    db.commit()
+    
+    # Discard it
+    result = sidequest_service.discard_sidequest(db, test_user.id, quest.id)
+    assert result is True
+    
+    # Verify it's gone
+    remaining = db.query(models.Sidequest).filter(models.Sidequest.id == quest.id).first()
+    assert remaining is None
+
+def test_discard_sidequest_not_found(db, test_user):
+    # Try to discard a non-existent quest
+    fake_id = uuid.uuid4()
+    result = sidequest_service.discard_sidequest(db, test_user.id, fake_id)
+    assert result is False
