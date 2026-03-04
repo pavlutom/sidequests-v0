@@ -30,8 +30,8 @@ jobs:
         run: docker compose exec -T backend pytest
 
       - name: Generate Coverage Badge
-        if: github.ref == 'refs/heads/main'
-        run: docker compose exec -T backend coverage-badge -o coverage.svg -f
+        if: github.ref == 'refs/heads/master'
+        run: docker compose exec -T backend python generate_badge.py
 
       - name: Copy badge to host
         if: github.ref == 'refs/heads/master'
