@@ -2,9 +2,9 @@ name: Backend CI
 
 on:
   push:
-    branches: ["main"]
+    branches: ["master"]
   pull_request:
-    branches: ["main"]
+    branches: ["master"]
 
 jobs:
   test:
@@ -34,11 +34,11 @@ jobs:
         run: docker compose exec -T backend coverage-badge -o coverage.svg -f
 
       - name: Copy badge to host
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/master'
         run: docker cp $(docker compose ps -q backend):/app/coverage.svg ./backend/coverage.svg
 
       - name: Commit Coverage Badge
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/master'
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
