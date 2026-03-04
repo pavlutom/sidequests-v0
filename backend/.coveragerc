@@ -5,6 +5,7 @@ omit =
     env.py
     conftest.py
     test_*.py
+    generate_badge.py
 
 [report]
 # Regexes for lines to exclude from consideration
