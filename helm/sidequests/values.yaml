@@ -25,6 +25,7 @@ backend:
     accessTokenExpireMinutes: "10080"
     generatorType: "hardcoded"
     openaiModel: ""
+    timezone: "UTC"
   secrets:
     secretKey: "yoursecretkeyhere"
     openaiApiKey: "your_openai_api_key_here"

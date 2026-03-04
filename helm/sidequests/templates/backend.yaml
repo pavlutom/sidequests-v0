@@ -13,6 +13,7 @@ data:
   ACCESS_TOKEN_EXPIRE_MINUTES: {{ .Values.backend.config.accessTokenExpireMinutes | quote }}
   GENERATOR_TYPE: {{ .Values.backend.config.generatorType | quote }}
   OPENAI_MODEL: {{ .Values.backend.config.openaiModel | quote }}
+  TIMEZONE: {{ .Values.backend.config.timezone | quote }}
 ---
 apiVersion: v1
 kind: Secret

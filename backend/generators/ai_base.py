@@ -1,10 +1,10 @@
 import json
 from abc import abstractmethod
-from typing import Dict, Any, List
+from typing import Any
 from .base import BaseGenerator
 
 class AIGenerator(BaseGenerator):
-    def _create_prompt(self, preferences: Dict[str, Any]) -> str:
+    def _create_prompt(self, preferences: dict[str, Any]) -> str:
         """
         Creates a prompt for the AI based on user preferences.
         """
@@ -42,7 +42,7 @@ Return the response ONLY as a structured JSON with the following schema:
 """
         return prompt.strip()
 
-    def _validate_response(self, response_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _validate_response(self, response_data: dict[str, Any]) -> dict[str, Any]:
         """
         Validates that the AI response has the required fields.
         """

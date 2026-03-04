@@ -1,4 +1,5 @@
 import os
+import datetime
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pathlib import Path
@@ -25,13 +26,28 @@ class Settings(BaseSettings):
     database_password: str = Field("password", alias="POSTGRES_PASSWORD")
     database_name: str = Field("sidequests", alias="POSTGRES_DB")
     
-    database_url_override: str | None = Field(None, alias="DATABASE_URL")
+    timezone: str = Field("UTC", alias="TIMEZONE")
     
     @property
     def database_url(self) -> str:
-        if self.database_url_override:
-            return self.database_url_override
-        return f"postgresql://{self.database_user}:{self.database_password}@{self.database_host}:{self.database_port}/{self.database_name}"
+        # Check for DATABASE_URL environment variable directly for internal overrides (like tests)
+        env_url = os.getenv("DATABASE_URL")
+        if env_url:
+            return env_url
+        return f"postgresql+psycopg://{self.database_user}:{self.database_password}@{self.database_host}:{self.database_port}/{self.database_name}"
+
+    @property
+    def tz(self) -> datetime.timezone:
+        """Returns a timezone object based on the configured timezone string."""
+        try:
+            import zoneinfo
+        except ImportError:
+            from backports import zoneinfo
+        
+        try:
+            return zoneinfo.ZoneInfo(self.timezone)
+        except zoneinfo.ZoneInfoNotFoundError:
+            return zoneinfo.ZoneInfo("UTC")
 
     cors_origins: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
     secret_key: str = Field("super_secret_temporary_key_for_dev_change_me", alias="SECRET_KEY")

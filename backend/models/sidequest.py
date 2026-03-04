@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 import uuid
 import datetime
 from database import Base
+from config import settings
 
 class Sidequest(Base):
     __tablename__ = "sidequests"
@@ -10,7 +11,7 @@ class Sidequest(Base):
     id = Column(Uuid, primary_key=True, default=uuid.uuid4)
     title = Column(String, nullable=False)
     description = Column(String, nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(settings.tz))
     accepted_at = Column(DateTime, nullable=True)
     completed_at = Column(DateTime, nullable=True)
     reward_xp = Column(Integer, nullable=False)

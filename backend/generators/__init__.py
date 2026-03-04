@@ -1,4 +1,4 @@
-from typing import Dict, Any, Optional
+from typing import Any
 from .base import BaseGenerator
 from .hardcoded import HardcodedGenerator
 from .openai_gen import OpenAIGenerator
@@ -17,9 +17,9 @@ def get_generator(generator_type: str, settings: Any) -> BaseGenerator:
     return HardcodedGenerator()
 
 # Legacy interface support
-_generator_instance: Optional[BaseGenerator] = None
+_generator_instance: BaseGenerator | None = None
 
-def generate_sidequest(user_id: Any, preferences: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def generate_sidequest(user_id: Any, preferences: dict[str, Any] | None = None) -> dict[str, Any]:
     """
     Legacy-compatible interface that uses the configured generator.
     """

@@ -12,10 +12,17 @@ SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 import config
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
+from _pytest.monkeypatch import MonkeyPatch
+
+@pytest.fixture(scope="session")
+def monkeypatch_session():
+    m = MonkeyPatch()
+    yield m
+    m.undo()
 
 @pytest.fixture(scope="session", autouse=True)
-def override_settings():
-    config.settings.database_url_override = SQLALCHEMY_DATABASE_URL
+def override_settings(monkeypatch_session):
+    monkeypatch_session.setenv("DATABASE_URL", SQLALCHEMY_DATABASE_URL)
     config.settings.generator_type = "hardcoded"
     yield
 

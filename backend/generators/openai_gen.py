@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Dict, Any
+from typing import Any
 from openai import OpenAI
 from .ai_base import AIGenerator
 
@@ -9,7 +9,7 @@ class OpenAIGenerator(AIGenerator):
         self.client = OpenAI(api_key=api_key)
         self.model = model
 
-    def generate(self, preferences: Dict[str, Any]) -> Dict[str, Any]:
+    def generate(self, preferences: dict[str, Any]) -> dict[str, Any]:
         prompt = self._create_prompt(preferences)
         
         try:

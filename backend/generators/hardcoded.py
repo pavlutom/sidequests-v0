@@ -1,5 +1,5 @@
 import random
-from typing import Dict, Any
+from typing import Any
 from .base import BaseGenerator
 
 # Hardcoded list of sidequests for the MVP
@@ -38,7 +38,7 @@ SIDEQUESTS = [
 ]
 
 class HardcodedGenerator(BaseGenerator):
-    def generate(self, preferences: Dict[str, Any]) -> Dict[str, Any]:
+    def generate(self, preferences: dict[str, Any]) -> dict[str, Any]:
         """
         Generates a random sidequest from a hardcoded list.
         Ignores preferences for now to maintain backward compatibility/fallback.
