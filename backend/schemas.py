@@ -33,18 +33,20 @@ class SidequestBase(BaseModel):
     description: str | None = None
     reward_xp: int
 
-class SidequestCreate(SidequestBase):
-    pass
+class SidequestAccept(BaseModel):
+    quest_id: uuid.UUID
 
 class SidequestResponse(SidequestBase):
     id: uuid.UUID
     user_id: uuid.UUID
     created_at: datetime
+    accepted_at: datetime | None = None
     completed_at: datetime | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
 class SidequestGenerateResponse(BaseModel):
+    id: uuid.UUID
     title: str
     description: str
     reward_xp: int

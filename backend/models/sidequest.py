@@ -11,6 +11,7 @@ class Sidequest(Base):
     title = Column(String, nullable=False)
     description = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    accepted_at = Column(DateTime, nullable=True)
     completed_at = Column(DateTime, nullable=True)
     reward_xp = Column(Integer, nullable=False)
     

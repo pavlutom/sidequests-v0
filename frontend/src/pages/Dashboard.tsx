@@ -13,6 +13,7 @@ interface Sidequest {
 }
 
 interface GeneratedQuest {
+    id: string;
     title: string;
     description: string;
     reward_xp: number;
@@ -101,7 +102,7 @@ export default function Dashboard() {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(generatedQuest)
+                body: JSON.stringify({ quest_id: generatedQuest.id })
             });
             setGeneratedQuest(null);
             fetchSidequests();
